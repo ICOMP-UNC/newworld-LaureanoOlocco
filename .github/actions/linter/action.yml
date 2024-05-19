@@ -1,0 +1,15 @@
+name: Linter
+description: Run linter on Go code
+inputs:
+  target-directory:
+    description: 'The directory containing the Go code to be linted'
+    required: true
+    default: '.'
+runs:
+  using: 'composite'
+  steps:
+    - name: golangci-lint
+        uses: golangci/golangci-lint-action@v5
+        with:
+          # NOTE: Keep this in sync with the version from .golangci.yml
+          version: v1.57.1
