@@ -33,6 +33,10 @@ func (s *Server) Start() {
 	app.Use(cors.New())
 	app.Use(logger.New())
 
+	// Ruta raíz que devuelve "Hola Mundo"
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendString("Hola Mundo")
+	})
 	// Endpoints related to everyone
 	userRoutes := app.Group("/user")
 	userRoutes.Post("/register", s.userHandlers.Register)
