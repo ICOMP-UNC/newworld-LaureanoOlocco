@@ -1,0 +1,81 @@
+services:
+  api: # Esto es para la API
+    build: ./.. # Ruta al Dockerfile
+    restart: on-failure # Si el contenedor falla, reinicialo
+    depends_on: # Depende de la base de datos
+      - db
+    ports:
+      - "${API_PORT}:${API_PORT}" # Izquierda: puerto externo del contenedor (navegador), derecha: puerto de la API en sí 
+    environment:
+      - API_PORT=${API_PORT}
+      - DOMAIN=${DOMAIN}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - DB_HOST=${DB_HOST}
+      - RUN_LOCAL=${RUN_LOCAL}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+    labels:
+      - "traefik.http.routers.api.entrypoints=web"
+      - "traefik.http.routers.api.rule=Host(`api.localhost`)"
+    volumes:
+      # El volumen cppserver-data fue eliminado porque dependía del cppserver
+      - api-data:/usr/src/app/build/serverDB
+
+  whoami:
+    # Un contenedor que expone una API para mostrar su dirección IP
+    image: traefik/whoami
+    labels:
+      - "traefik.http.routers.whoami.rule=Host(`whoami.docker.localhost`)"
+
+  db:
+    image: postgres # Imagen de PostgreSQL
+    restart: "no" # No reiniciar el contenedor
+    shm_size: 128mb # Set shared memory limit when using docker-compose
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    labels:
+      - "traefik.enable=false"
+    ports:
+      - "${DB_PORT}:5432" # Puerto de la base de datos (quizás no haga falta si no me quiero conectar desde afuera)
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  adminer:
+    # Herramienta de gestión de bases de datos, útil para desarrollo
+    image: adminer
+    restart: "no"
+    ports:
+      - 9080:9080
+    labels:
+      - "traefik.http.routers.adminer.entrypoints=web"
+      - "traefik.http.routers.adminer.rule=Host(`adminer.docker.localhost`)"
+
+  reverse-proxy:
+    # Imagen oficial de Traefik v3
+    image: traefik:v3.0
+    # Habilita la interfaz web y configura Traefik para escuchar a Docker
+    command: 
+      - "--api.insecure=true"
+      - "--providers.docker"
+      - "--entrypoints.web.address=:80"
+    ports:
+      # Puerto HTTP
+      - "80:80"
+      # Interfaz web (habilitada con --api.insecure=true)
+      - "8080:8080"
+    volumes:
+      # Para que Traefik pueda escuchar los eventos de Docker
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  db-data:
+  api-data: # Nuevo volumen para la API
+
+networks:
+  traefik-network:
+  deployment_default:
+  web:
