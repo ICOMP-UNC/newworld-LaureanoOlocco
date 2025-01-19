@@ -33,7 +33,7 @@ type GenerateJWTFunc func(email, password string) (string, error)
 var GenerateJWT GenerateJWTFunc = func(email, password string) (string, error) {
 
 	// Set the expiration time of the token
-	expirationTime := time.Now().Add(5 * time.Minute)
+	expirationTime := time.Now().Add(99 * time.Minute)
 
 	// set role based on username and password
 	role := "user"

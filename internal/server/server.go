@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	_ "github.com/ICOMP-UNC/newworld-LaureanoOlocco/docs" // Import generated docs
 	"github.com/ICOMP-UNC/newworld-LaureanoOlocco/internal/core/ports"
 	"github.com/ICOMP-UNC/newworld-LaureanoOlocco/internal/utils"
 	"github.com/gofiber/fiber/v2"

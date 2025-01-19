@@ -43,6 +43,7 @@ services:
       - "${DB_PORT}:5432" # Puerto de la base de datos (quizás no haga falta si no me quiero conectar desde afuera)
     volumes:
       - db-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql # Script SQL para inicializar la base de datos  
 
   adminer:
     # Herramienta de gestión de bases de datos, útil para desarrollo

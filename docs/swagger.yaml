@@ -1,0 +1,473 @@
+basePath: /
+definitions:
+  github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.BadResponse:
+    properties:
+      code:
+        example: "400"
+        type: string
+      message:
+        example: Bad request
+        type: string
+    type: object
+  github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.Dashboard:
+    properties:
+      balance:
+        example: 100
+        type: integer
+      offers:
+        items:
+          $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OfferWithPrice'
+        type: array
+      orders:
+        items:
+          $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.UserOrderStatus'
+        type: array
+    type: object
+  github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.DashboardResponse:
+    properties:
+      code:
+        example: "200"
+        type: string
+      message:
+        $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.Dashboard'
+    type: object
+  github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.Items:
+    properties:
+      itemID:
+        example: 1
+        type: integer
+      quantity:
+        example: 23
+        type: integer
+    required:
+    - itemID
+    - quantity
+    type: object
+  github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OfferWithPrice:
+    properties:
+      category:
+        example: food
+        type: string
+      id:
+        example: 1
+        type: integer
+      name:
+        example: meat
+        type: string
+      price:
+        example: 10.5
+        type: number
+      quantity:
+        example: 9
+        type: integer
+    required:
+    - category
+    - id
+    - name
+    - price
+    - quantity
+    type: object
+  github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OffersRegister:
+    properties:
+      code:
+        example: "200"
+        type: string
+      message:
+        items:
+          $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OfferWithPrice'
+        type: array
+    type: object
+  github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.Order:
+    properties:
+      status:
+        example: pending
+        type: string
+      total:
+        example: 100
+        type: integer
+    required:
+    - status
+    - total
+    type: object
+  github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OrderCheckout:
+    properties:
+      order:
+        items:
+          $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.Items'
+        type: array
+    type: object
+  github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OrderResponse:
+    properties:
+      code:
+        example: "200"
+        type: string
+      message:
+        $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.Order'
+    type: object
+  github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OrderStatusResponse:
+    properties:
+      code:
+        example: "200"
+        type: string
+      message:
+        $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.UserOrderStatus'
+    type: object
+  github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OrderStatusUpdate:
+    properties:
+      status:
+        example: delivered
+        type: string
+    required:
+    - status
+    type: object
+  github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.Response:
+    properties:
+      code:
+        example: "201"
+        type: string
+      message:
+        example: User added
+        type: string
+    type: object
+  github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.User:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      password:
+        type: string
+    type: object
+  github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.UserLogin:
+    properties:
+      email:
+        example: example@example.com
+        type: string
+      password:
+        example: password
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.UserOrderStatus:
+    properties:
+      id:
+        example: 1
+        type: integer
+      status:
+        example: pending
+        type: string
+      total:
+        example: 100
+        type: integer
+      user:
+        example: johndoe
+        type: string
+    type: object
+  github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.UserRegister:
+    properties:
+      confirmPassword:
+        example: password
+        type: string
+      email:
+        example: example@example.com
+        type: string
+      password:
+        example: password
+        type: string
+      username:
+        example: johndoe
+        type: string
+    required:
+    - confirmPassword
+    - email
+    - password
+    - username
+    type: object
+  github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.UserResponseLogin:
+    properties:
+      code:
+        example: "200"
+        type: string
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+        type: string
+    type: object
+host: api.docker.localhost
+info:
+  contact:
+    email: fiber@swagger.io
+    name: API Support
+  description: This Api makes the CRUD operations for testing the new world project
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Fiber API for new word project
+  version: "1.2"
+paths:
+  /admin/dashboard:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the dashboard data using JWT token authentication
+      parameters:
+      - description: JWT token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.DashboardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.BadResponse'
+        "500":
+          description: Bad server
+      security:
+      - ApiKeyAuth: []
+      summary: Get the dashboard data
+      tags:
+      - Admin
+  /admin/orders/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: Update the status of an order using JWT token authentication
+      parameters:
+      - description: JWT token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Order Status
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OrderStatusUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.UserOrderStatus'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.BadResponse'
+        "404":
+          description: Order not found
+        "500":
+          description: Bad server
+      security:
+      - ApiKeyAuth: []
+      summary: Update the order status
+      tags:
+      - Admin
+  /auth/checkout:
+    post:
+      consumes:
+      - application/json
+      description: Checkout an order by providing the order details using JWT token
+        authentication
+      parameters:
+      - description: JWT token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Order details
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OrderCheckout'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.BadResponse'
+        "401":
+          description: Invalid token
+        "500":
+          description: Bad server
+      security:
+      - ApiKeyAuth: []
+      summary: Checkout an order
+      tags:
+      - Offers
+  /auth/offers:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all offers using JWT token authentication
+      parameters:
+      - description: JWT token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OffersRegister'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.BadResponse'
+        "500":
+          description: Bad server
+      security:
+      - ApiKeyAuth: []
+      summary: Get all offers
+      tags:
+      - Offers
+  /auth/order/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get an order by providing the order ID using JWT token authentication
+      parameters:
+      - description: JWT token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OrderStatusResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.BadResponse'
+        "401":
+          description: Invalid token
+        "500":
+          description: Bad server
+      security:
+      - ApiKeyAuth: []
+      summary: Get order by ID
+      tags:
+      - Offers
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      description: Login with email and password
+      parameters:
+      - description: User login details
+        in: body
+        name: userLogin
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.UserLogin'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.UserResponseLogin'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.BadResponse'
+        "401":
+          description: Invalid password
+        "404":
+          description: User not found
+        "500":
+          description: Bad server
+      summary: User login
+      tags:
+      - Users
+  /user/register:
+    post:
+      consumes:
+      - application/json
+      description: Register with username, email, password, and confirm password
+      parameters:
+      - description: User registration details
+        in: body
+        name: userRegister
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.UserRegister'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.BadResponse'
+        "401":
+          description: The passwords are not equal
+        "402":
+          description: Mail already registered
+        "500":
+          description: Bad server
+      summary: User registration
+      tags:
+      - Users
+  /user/search:
+    get:
+      consumes:
+      - application/json
+      description: Get user details by email
+      parameters:
+      - description: Email
+        in: query
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.User'
+        "404":
+          description: Not found
+        "500":
+          description: Bad server
+      summary: Get user by email
+      tags:
+      - Users
+swagger: "2.0"
