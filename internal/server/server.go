@@ -34,9 +34,9 @@ func (s *Server) Start() {
 	app.Use(cors.New())
 	app.Use(logger.New())
 
-	// Ruta raíz que devuelve "Hola Mundo"
+	// Ruta raíz que devuelve un mensaje de bienvenida
 	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hola Mundo")
+		return c.SendString("Welcome to Laureano's New World")
 	})
 	// Endpoints related to everyone
 	userRoutes := app.Group("/user")

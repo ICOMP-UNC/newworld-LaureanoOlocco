@@ -21,7 +21,23 @@ services:
       - "traefik.http.routers.api.rule=Host(`api.localhost`)"
     volumes:
       # El volumen cppserver-data fue eliminado porque dependía del cppserver
-      - api-data:/usr/src/app/build/serverDB
+      - cppserver-data:/usr/src/app/build/serverDB
+
+  cppserver: #esto es para el servidor de c++
+    image: cppserver:latest #imagen de c++
+    restart: on-failure
+    ports:
+      - "9004:9004"
+      - "9000:9000"
+      - "8083:8083"
+    labels:
+      - "traefik.http.routers.cppserver.entrypoints=web"
+      - "traefik.http.routers.cppserver.rule=Host(`cppserver.docker.localhost`)"
+      - "traefik.http.services.cppserver.loadbalancer.server.port=8083"
+      #- "traefik.http.services.cppserver.loadbalancer.server.port=9004"
+      #- "traefik.http.services.cppserver.loadbalancer.server.port=9000"
+    volumes:
+      - cppserver-data:/usr/src/app/build/serverDB
 
   whoami:
     # Un contenedor que expone una API para mostrar su dirección IP
@@ -74,7 +90,7 @@ services:
 
 volumes:
   db-data:
-  api-data: # Nuevo volumen para la API
+  cppserver-data:
 
 networks:
   traefik-network:

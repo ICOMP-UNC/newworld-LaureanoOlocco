@@ -16,12 +16,86 @@ type OfferService struct {
 	UserService     *UserService // Add UserService to OfferService
 }
 
+type ServerResponse struct {
+	Supplies map[string]map[string]int `json:"supplies"`
+}
+
 func NewOfferService(repository ports.IOffersRepository, userService *UserService) *OfferService {
 	return &OfferService{
 		offerRepository: repository,
 		UserService:     userService,
 	}
 }
+
+// func (s *OfferService) GetAllOffers() ([]domain.OfferWithPrice, error) {
+// 	// Obtener las ofertas desde el repositorio
+// 	offers, err := s.offerRepository.GetOffersData()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	// Hacer la solicitud HTTP al servidor cppServer para obtener la cantidad de ofertas
+
+// 	var resp *http.Response
+
+// 	if os.Getenv("RUN_LOCAL") == "true" {
+// 		resp, err = http.Get("http://localhost:8083/supplies")
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 	} else {
+// 		resp, err = http.Get("http://cppserver:8083/supplies")
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 	}
+
+// 	defer resp.Body.Close()
+
+// 	// Leer el cuerpo de la respuesta
+// 	body, err := io.ReadAll(resp.Body)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	// Crear el nuevo JSON con la información en el formato deseado
+// 	var supplies map[string]map[string]int
+// 	err = json.Unmarshal(body, &supplies)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	// Crear las ofertas con cantidad
+// 	var offersWithPrice []domain.OfferWithPrice
+// 	for _, offer := range offers {
+// 		quantity := 0
+// 		// Normalizamos las categorías para asegurarnos de mapear correctamente
+// 		var normalizedCategory string
+// 		switch offer.Category {
+// 		case "food":
+// 			normalizedCategory = "food"
+// 		case "drink":
+// 			normalizedCategory = "food" // Asumiendo que "water" está bajo "food" en suministros
+// 		default:
+// 			normalizedCategory = offer.Category
+// 		}
+
+// 		if categorySupplies, ok := supplies[normalizedCategory]; ok {
+// 			if qty, ok := categorySupplies[offer.Name]; ok {
+// 				quantity = qty
+// 			}
+// 		}
+// 		offersWithPrice = append(offersWithPrice, domain.OfferWithPrice{
+// 			ID:       offer.ID,
+// 			Name:     offer.Name,
+// 			Quantity: quantity / 5,
+// 			Price:    offer.Price,
+// 			Category: offer.Category,
+// 		})
+// 	}
+
+// 	return offersWithPrice, nil
+// }
 
 func (s *OfferService) GetAllOffers() ([]domain.OfferWithPrice, error) {
 	// Obtener las ofertas desde el repositorio
@@ -30,22 +104,16 @@ func (s *OfferService) GetAllOffers() ([]domain.OfferWithPrice, error) {
 		return nil, err
 	}
 
-	// Hacer la solicitud HTTP al servidor cppServer para obtener la cantidad de ofertas
-
+	// Hacer la solicitud HTTP al servidor cppServer
 	var resp *http.Response
-
 	if os.Getenv("RUN_LOCAL") == "true" {
-		resp, err = http.Get("http://localhost:9004/supplies")
-		if err != nil {
-			return nil, err
-		}
+		resp, err = http.Get("http://localhost:8083/supplies")
 	} else {
-		resp, err = http.Get("http://cppserver:9004/supplies")
-		if err != nil {
-			return nil, err
-		}
+		resp, err = http.Get("http://cppserver:8083/supplies")
 	}
-
+	if err != nil {
+		return nil, err
+	}
 	defer resp.Body.Close()
 
 	// Leer el cuerpo de la respuesta
@@ -54,24 +122,26 @@ func (s *OfferService) GetAllOffers() ([]domain.OfferWithPrice, error) {
 		return nil, err
 	}
 
-	// Crear el nuevo JSON con la información en el formato deseado
-	var supplies map[string]map[string]int
-	err = json.Unmarshal(body, &supplies)
+	// Deserializar en la estructura completa
+	var serverData ServerResponse
+	err = json.Unmarshal(body, &serverData)
 	if err != nil {
 		return nil, err
 	}
+
+	// Extraer solo supplies
+	supplies := serverData.Supplies
 
 	// Crear las ofertas con cantidad
 	var offersWithPrice []domain.OfferWithPrice
 	for _, offer := range offers {
 		quantity := 0
-		// Normalizamos las categorías para asegurarnos de mapear correctamente
 		var normalizedCategory string
 		switch offer.Category {
 		case "food":
 			normalizedCategory = "food"
 		case "drink":
-			normalizedCategory = "food" // Asumiendo que "water" está bajo "food" en suministros
+			normalizedCategory = "food"
 		default:
 			normalizedCategory = offer.Category
 		}
