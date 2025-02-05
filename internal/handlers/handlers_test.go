@@ -70,6 +70,11 @@ func (m *mockOfferService) ProcessOrder(email string, order domain.OrderCheckout
 
 // TestLogin tests the login function
 func TestLogin(t *testing.T) {
+
+	// Establece el valor de la variable de entorno para este test
+	os.Setenv("JWT_SECRET_KEY", "clave_secreta")
+	defer os.Unsetenv("JWT_SECRET_KEY") // Limpia la variable de entorno después del test
+
 	// Inicializa la aplicación Fiber
 	app := fiber.New()
 
