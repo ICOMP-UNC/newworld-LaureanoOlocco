@@ -1,10 +1,5 @@
 name: Tests
 description: Run testing on Go code
-inputs:
-  target-directory:
-    description: 'The directory containing the Go code to be tested'
-    required: true
-    default: './tests'
 runs:
   using: 'composite'
   steps:
@@ -12,13 +7,12 @@ runs:
       shell: bash
       id: coverage
       run: |
-        coverage=$(go test -cover fmt | awk '/coverage: ([0-9.]+)%/{print $NF}')
-        echo "::set-output name=coverage::$coverage"
+        go test -coverprofile=coverage.out ./...
+        coverage=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
 
-    - name: Check Coverage
-      run: |
-        coverage=${{ steps.coverage.outputs.coverage }}
-        if (( $(echo "$coverage > 20" | bc -l) )); then
+        echo "Coverage is $coverage%"
+
+        if (( $(echo "$coverage >= 20" | bc -l) )); then
           echo "Coverage is greater than 20%"
           exit 0
         else
