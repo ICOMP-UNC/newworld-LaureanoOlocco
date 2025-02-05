@@ -6,37 +6,40 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func TestLogin_Success(t *testing.T) {
-	// Creamos una conexión mock a la base de datos
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Error al inicializar mock DB: %v", err)
 	}
 	defer db.Close()
 
-	// Creamos el repositorio con la conexión mock
 	repo := NewUserRepository(db)
 
-	// Definimos los datos esperados en la base de datos mockeada
+	// Definimos los datos de prueba
 	expectedEmail := "Ubuntu@gmail.com"
-	expectedPassword := "Ubuntu"
+	password := "Ubuntu"
+
+	// Creamos un hash de la contraseña como estaría en la base de datos
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	require.NoError(t, err)
 
 	rows := sqlmock.NewRows([]string{"password"}).
-		AddRow(expectedPassword)
+		AddRow(string(hashedPassword)) // Usamos la contraseña hasheada
 
 	mock.ExpectQuery(`SELECT password FROM users WHERE email = (.+)`).
 		WithArgs(expectedEmail).
 		WillReturnRows(rows)
 
-	// Ejecutamos el caso de prueba positivo
-	err = repo.Login(expectedEmail, expectedPassword)
+	// Intentamos hacer login con la contraseña sin hashear
+	err = repo.Login(expectedEmail, password)
 
 	// Verificamos que no haya errores
 	assert.NoError(t, err)
 
-	// Verificamos que todas las expectativas se hayan cumplido
 	err = mock.ExpectationsWereMet()
 	assert.NoError(t, err)
 }
