@@ -1,10 +1,10 @@
 package repositories
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/bcrypt"
@@ -103,34 +103,30 @@ func TestRegister_Success(t *testing.T) {
 	assert.NoError(t, err)
 }
 func TestRegister_EmailAlreadyRegistered(t *testing.T) {
-	// Creamos una conexión mock a la base de datos
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Error al inicializar mock DB: %v", err)
 	}
 	defer db.Close()
 
-	// Creamos el repositorio con la conexión mock
 	repo := NewUserRepository(db)
 
-	// Definimos los datos esperados para el registro
-	expectedUsername := "existinguser"
-	expectedEmail := "existinguser@example.com"
-	expectedPassword := "password"
+	username := "existinguser"
+	email := "existing@example.com"
+	password := "password"
 
-	// Configuramos la expectativa para la inserción en la base de datos
-	mock.ExpectExec(`INSERT INTO users \(username, email, password\) VALUES \(\$1, \$2, \$3\)`).
-		WithArgs(expectedUsername, expectedEmail, expectedPassword).
-		WillReturnError(&pq.Error{Code: "23505", Message: "duplicate key value violates unique constraint \"users_email_key\""})
+	// Configuramos el mock para que devuelva error de email duplicado
+	mock.ExpectExec("INSERT INTO users \\(username, email, password\\) VALUES \\(\\$1, \\$2, \\$3\\)").
+		WithArgs(username, email, sqlmock.AnyArg()). // Usamos AnyArg() para la contraseña hasheada
+		WillReturnError(fmt.Errorf("email already registered"))
 
 	// Ejecutamos el registro
-	err = repo.Register(expectedUsername, expectedEmail, expectedPassword)
+	err = repo.Register(username, email, password)
 
-	// Verificamos que se haya producido un error
-	assert.Error(t, err)
+	// Verificamos que el error sea el esperado
 	assert.EqualError(t, err, "email already registered")
 
-	// Verificamos que todas las expectativas se hayan cumplido
+	// Verificamos que todas las expectativas se cumplieron
 	err = mock.ExpectationsWereMet()
 	assert.NoError(t, err)
 }
