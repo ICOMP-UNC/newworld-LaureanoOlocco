@@ -7,6 +7,7 @@ import (
 	"github.com/ICOMP-UNC/newworld-LaureanoOlocco/internal/core/domain"
 	"github.com/ICOMP-UNC/newworld-LaureanoOlocco/internal/core/ports"
 	"github.com/lib/pq"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserRepository struct {
@@ -23,9 +24,9 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 }
 
 func (r *UserRepository) Login(email string, password string) error {
-	var storedPassword string
+	var storedHashedPassword string
 	query := `SELECT password FROM users WHERE email = $1`
-	err := r.db.QueryRow(query, email).Scan(&storedPassword)
+	err := r.db.QueryRow(query, email).Scan(&storedHashedPassword)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return errors.New("user not found")
@@ -33,7 +34,9 @@ func (r *UserRepository) Login(email string, password string) error {
 		return err
 	}
 
-	if storedPassword != password {
+	// Comparar la contraseña ingresada con el hash almacenado
+	err = bcrypt.CompareHashAndPassword([]byte(storedHashedPassword), []byte(password))
+	if err != nil {
 		return errors.New("invalid password")
 	}
 
@@ -41,16 +44,19 @@ func (r *UserRepository) Login(email string, password string) error {
 }
 
 func (r *UserRepository) Register(username, email, password string) error {
-	// Insert the user into the database
-	query := `INSERT INTO users (username, email, password) VALUES ($1, $2, $3)`
-	_, err := r.db.Exec(query, username, email, password)
+	// Hashear la contraseña antes de almacenarla
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
+		return errors.New("error hashing password")
+	}
 
-		// Check if the error is a unique violation
-		if pqErr, ok := err.(*pq.Error); ok {
-			if pqErr.Code.Name() == "unique_violation" {
-				return errors.New("email already registered")
-			}
+	// Insertar el usuario en la base de datos
+	query := `INSERT INTO users (username, email, password) VALUES ($1, $2, $3)`
+	_, err = r.db.Exec(query, username, email, string(hashedPassword))
+	if err != nil {
+		// Verificar si el error es por una clave duplicada
+		if pqErr, ok := err.(*pq.Error); ok && pqErr.Code.Name() == "unique_violation" {
+			return errors.New("email already registered")
 		}
 		return err
 	}
