@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      JWT_SECRET_KEY: "your-secret-key-for-testing"  # Variable agregada aquí
 
     steps:
       - name: Checkout repository
@@ -27,8 +29,6 @@ jobs:
         uses: ./.github/actions/tests
   
   lint:
-    # https://primegopher.medium.com/configure-the-golangci-lint-workflow-for-your-golang-applications-6e765f2146c5
-    # https://golangci-lint.run/
     runs-on: ubuntu-latest
 
     steps:
@@ -41,4 +41,4 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.56.0
-          args: --timeout 3m 
+          args: --timeout 3m

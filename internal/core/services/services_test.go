@@ -204,7 +204,7 @@ func TestGetAllOffers(t *testing.T) {
 	}
 	jsonData, _ := json.Marshal(supplies)
 
-	httpmock.RegisterResponder("GET", "http://cppserver:9004/supplies",
+	httpmock.RegisterResponder("GET", "http://cppserver:8083/supplies",
 		httpmock.NewStringResponder(200, string(jsonData)))
 
 	// Crear instancia del mock del servicio de usuario
