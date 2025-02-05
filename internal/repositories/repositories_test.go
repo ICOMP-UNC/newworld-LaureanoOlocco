@@ -79,37 +79,29 @@ func TestLogin_Failure(t *testing.T) {
 }
 
 func TestRegister_Success(t *testing.T) {
-	// Creamos una conexión mock a la base de datos
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Error al inicializar mock DB: %v", err)
 	}
 	defer db.Close()
 
-	// Creamos el repositorio con la conexión mock
 	repo := NewUserRepository(db)
 
-	// Definimos los datos esperados para el registro
-	expectedUsername := "testuser"
-	expectedEmail := "testuser@example.com"
-	expectedPassword := "password"
+	username := "testuser"
+	email := "test@example.com"
+	password := "password"
 
-	// Configuramos la expectativa para la inserción en la base de datos
-	mock.ExpectExec(`INSERT INTO users \(username, email, password\) VALUES \(\$1, \$2, \$3\)`).
-		WithArgs(expectedUsername, expectedEmail, expectedPassword).
-		WillReturnResult(sqlmock.NewResult(1, 1)) // Simulamos que se insertó correctamente 1 fila
+	// Usamos sqlmock.AnyArg() para el campo de contraseña
+	mock.ExpectExec("INSERT INTO users \\(username, email, password\\) VALUES \\(\\$1, \\$2, \\$3\\)").
+		WithArgs(username, email, sqlmock.AnyArg()). // AnyArg() acepta cualquier valor para la contraseña hasheada
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	// Ejecutamos el registro
-	err = repo.Register(expectedUsername, expectedEmail, expectedPassword)
-
-	// Verificamos que no haya errores
+	err = repo.Register(username, email, password)
 	assert.NoError(t, err)
 
-	// Verificamos que todas las expectativas se hayan cumplido
 	err = mock.ExpectationsWereMet()
 	assert.NoError(t, err)
 }
-
 func TestRegister_EmailAlreadyRegistered(t *testing.T) {
 	// Creamos una conexión mock a la base de datos
 	db, mock, err := sqlmock.New()
