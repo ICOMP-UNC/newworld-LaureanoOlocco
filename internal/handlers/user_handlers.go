@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
+	"time"
 
 	"github.com/ICOMP-UNC/newworld-LaureanoOlocco/internal/core/domain"
 	"github.com/ICOMP-UNC/newworld-LaureanoOlocco/internal/core/ports"
@@ -33,6 +35,7 @@ func NewUserHandlers(service ports.IUserService) *UserHandlers {
 // @Router /user/login [post]
 func (h *UserHandlers) Login(c *fiber.Ctx) error {
 	var req domain.UserLogin
+	ip := c.IP()
 
 	// Parse the body into the req struct
 	if err := c.BodyParser(&req); err != nil {
@@ -42,19 +45,44 @@ func (h *UserHandlers) Login(c *fiber.Ctx) error {
 	// if the request is fine, we call the login function from the user service
 	err := h.userService.Login(req.Email, req.Password)
 	if err != nil {
+		// Only check rate limit for failed login attempts
+		if err.Error() == "invalid password" {
+			allowed, err := utils.CheckLoginRateLimit(ip)
+			if err != nil {
+				return c.Status(fiber.StatusInternalServerError).JSON(domain.BadResponse{
+					Code:    "500",
+					Message: "Internal server error",
+				})
+			}
+
+			if !allowed {
+				_, reset, _ := utils.GetRateLimitInfo(ip, "login")
+				remainingMinutes := int((reset - time.Now().Unix()) / 60)
+				return c.Status(fiber.StatusTooManyRequests).JSON(domain.BadResponse{
+					Code:    "409",
+					Message: fmt.Sprintf("Too many failed attempts. Try again in %d minutes", remainingMinutes),
+				})
+			}
+		}
+
 		if err.Error() == "user not found" {
 			return c.Status(fiber.StatusNotFound).JSON(domain.BadResponse{Code: "404", Message: "User not found"})
 		}
 		if err.Error() == "invalid password" {
 			return c.Status(fiber.StatusUnauthorized).JSON(domain.BadResponse{Code: "401", Message: "Invalid password"})
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(domain.BadResponse{Code: "500", Message: "Bad server"})
+		return c.Status(fiber.StatusInternalServerError).JSON(domain.BadResponse{Code: "500", Message: "Internal server error"})
 	}
 
 	// if the login is successful, we generate a token
 	token, err := utils.GenerateJWT(req.Email, req.Password)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(domain.BadResponse{Code: "500", Message: "Bad server"})
+		return c.Status(fiber.StatusInternalServerError).JSON(domain.BadResponse{Code: "500", Message: "Internal server error"})
+	}
+
+	// In case of successful login, clear failed attempts counter
+	if err := utils.ClearLoginRateLimit(ip); err != nil {
+		log.Printf("Error clearing rate limit: %v", err)
 	}
 
 	// if the token is generated successfully, we return the token

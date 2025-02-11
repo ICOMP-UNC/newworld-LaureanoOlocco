@@ -11,12 +11,14 @@ import (
 
 	"github.com/ICOMP-UNC/newworld-LaureanoOlocco/internal/core/domain"
 	"github.com/ICOMP-UNC/newworld-LaureanoOlocco/internal/utils"
+	"github.com/alicebob/miniredis/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
 var JwtKey []byte
+var mr *miniredis.Miniredis
 
 func init() {
 	JwtKey = []byte(os.Getenv("JWT_SECRET_KEY"))
@@ -25,6 +27,35 @@ func init() {
 // Mock del servicio de usuario
 type mockUserService struct {
 	mock.Mock
+}
+
+func TestMain(m *testing.M) {
+	var err error
+	// Iniciar miniredis
+	mr, err = miniredis.Run()
+	if err != nil {
+		panic(err)
+	}
+
+	// Configurar variables de entorno para las pruebas
+	os.Setenv("REDIS_HOST", mr.Host())
+	os.Setenv("REDIS_PORT", mr.Port())
+	os.Setenv("JWT_SECRET_KEY", "test_secret_key")
+	os.Setenv("ADMIN_EMAIL", "admin@test.com")
+	os.Setenv("ADMIN_PASSWORD", "admin_password")
+
+	// Ejecutar las pruebas
+	code := m.Run()
+
+	// Limpieza
+	mr.Close()
+	os.Unsetenv("REDIS_HOST")
+	os.Unsetenv("REDIS_PORT")
+	os.Unsetenv("JWT_SECRET_KEY")
+	os.Unsetenv("ADMIN_EMAIL")
+	os.Unsetenv("ADMIN_PASSWORD")
+
+	os.Exit(code)
 }
 
 func (m *mockUserService) Login(email string, password string) error {
@@ -70,11 +101,6 @@ func (m *mockOfferService) ProcessOrder(email string, order domain.OrderCheckout
 
 // TestLogin tests the login function
 func TestLogin(t *testing.T) {
-
-	// Establece el valor de la variable de entorno para este test
-	os.Setenv("JWT_SECRET_KEY", "clave_secreta")
-	defer os.Unsetenv("JWT_SECRET_KEY") // Limpia la variable de entorno después del test
-
 	// Inicializa la aplicación Fiber
 	app := fiber.New()
 
@@ -89,73 +115,51 @@ func TestLogin(t *testing.T) {
 	// Mock para la generación de JWT
 	originalGenerateJWT := utils.GenerateJWT
 	utils.GenerateJWT = func(email, password string) (string, error) {
-		return "token", nil
+		return "test_token", nil
 	}
 	defer func() {
-		// Restaura la función GenerateJWT original después del test
 		utils.GenerateJWT = originalGenerateJWT
 	}()
 
 	// Configura las rutas
 	app.Post("/user/login", handlers.Login)
 
-	// Caso de prueba: Successful login
+	// Caso de prueba: Login exitoso
 	t.Run("Successful login", func(t *testing.T) {
-		mockService.On("Login", "Ubuntu@gmail.com", "Ubuntu").Return(nil)
+		mockService.On("Login", "test@example.com", "password123").Return(nil)
 
-		// Crea una solicitud
-		reqBody := `{"email": "Ubuntu@gmail.com", "password": "Ubuntu"}`
+		reqBody := `{"email":"test@example.com","password":"password123"}`
 		req := httptest.NewRequest(http.MethodPost, "/user/login", bytes.NewBuffer([]byte(reqBody)))
 		req.Header.Set("Content-Type", "application/json")
 
-		// Crea un nuevo response recorder
-		resp, err := app.Test(req, -1) // -1 para desactivar el límite del cuerpo de la respuesta
-		if err != nil {
-			t.Fatalf("Error while testing the login function: %s", err)
-		}
-
-		// Verifica el código de estado de la respuesta
+		resp, err := app.Test(req, -1)
+		assert.Nil(t, err)
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-		// Verifica el cuerpo de la respuesta
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			t.Fatalf("Error while reading the response body: %v", err)
-		}
-		expectedBody := `{"code":"200","token":"token"}`
+		body, _ := io.ReadAll(resp.Body)
+		expectedBody := `{"code":"200","token":"test_token"}`
 		assert.JSONEq(t, expectedBody, string(body))
 
-		// Verifica las expectativas del mock
 		mockService.AssertExpectations(t)
 	})
 
-	// Caso de prueba: User not found
-	t.Run("User not found", func(t *testing.T) {
-		mockService.On("Login", "unknown@gmail.com", "password").Return(errors.New("user not found"))
+	// Caso de prueba: Contraseña inválida
+	t.Run("Invalid password", func(t *testing.T) {
+		mockService.On("Login", "test@example.com", "wrongpass").
+			Return(errors.New("invalid password"))
 
-		// Crea una solicitud
-		reqBody := `{"email": "unknown@gmail.com", "password": "password"}`
+		reqBody := `{"email":"test@example.com","password":"wrongpass"}`
 		req := httptest.NewRequest(http.MethodPost, "/user/login", bytes.NewBuffer([]byte(reqBody)))
 		req.Header.Set("Content-Type", "application/json")
 
-		// Crea un nuevo response recorder
-		resp, err := app.Test(req, -1) // -1 para desactivar el límite del cuerpo de la respuesta
-		if err != nil {
-			t.Fatalf("Error while testing the login function: %s", err)
-		}
+		resp, err := app.Test(req, -1)
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 
-		// Verifica el código de estado de la respuesta
-		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
-
-		// Verifica el cuerpo de la respuesta
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			t.Fatalf("Error while reading the response body: %v", err)
-		}
-		expectedBody := `{"code":"404","message":"User not found"}`
+		body, _ := io.ReadAll(resp.Body)
+		expectedBody := `{"code":"401","message":"Invalid password"}`
 		assert.JSONEq(t, expectedBody, string(body))
 
-		// Verifica las expectativas del mock
 		mockService.AssertExpectations(t)
 	})
 }
@@ -233,6 +237,53 @@ func TestRegister(t *testing.T) {
 		assert.JSONEq(t, expectedBody, string(body))
 
 		// Verifica las expectativas del mock
+		mockService.AssertExpectations(t)
+	})
+}
+
+func TestGetUserByEmail(t *testing.T) {
+	app := fiber.New()
+	mockService := new(mockUserService)
+	handlers := &UserHandlers{
+		userService: mockService,
+	}
+
+	app.Get("/user/search", handlers.GetUserByEmail)
+
+	// Caso de prueba: Usuario encontrado
+	t.Run("User found", func(t *testing.T) {
+		expectedUser := &domain.User{
+			ID:       1,
+			Email:    "test@example.com",
+			Password: "hashedpass",
+		}
+		mockService.On("GetUserByEmail", "test@example.com").Return(expectedUser, nil)
+
+		req := httptest.NewRequest(http.MethodGet, "/user/search?email=test@example.com", nil)
+		resp, err := app.Test(req, -1)
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+		body, _ := io.ReadAll(resp.Body)
+		expectedBody := `{"id":1,"email":"test@example.com","password":"hashedpass"}`
+		assert.JSONEq(t, expectedBody, string(body))
+
+		mockService.AssertExpectations(t)
+	})
+
+	// Caso de prueba: Usuario no encontrado
+	t.Run("User not found", func(t *testing.T) {
+		mockService.On("GetUserByEmail", "notfound@example.com").Return((*domain.User)(nil), nil)
+
+		req := httptest.NewRequest(http.MethodGet, "/user/search?email=notfound@example.com", nil)
+		resp, err := app.Test(req, -1)
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+
+		body, _ := io.ReadAll(resp.Body)
+		expectedBody := `{"error":"user not found"}`
+		assert.JSONEq(t, expectedBody, string(body))
+
 		mockService.AssertExpectations(t)
 	})
 }

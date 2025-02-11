@@ -11,8 +11,8 @@ const docTemplate = `{
         "title": "{{.Title}}",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
-            "name": "API Support",
-            "email": "fiber@swagger.io"
+            "name": "Laureano Olocco",
+            "email": "laureanoolocco@unc.edu.ar"
         },
         "license": {
             "name": "Apache 2.0",
@@ -294,6 +294,57 @@ const docTemplate = `{
                 }
             }
         },
+
+        "/auth/logout": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Logout user and invalidate JWT token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "User logout",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "JWT token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "example": "Logged out successfully"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.BadResponse"
+                        }
+                    }
+                }
+            }
+        },
+
         "/user/login": {
             "post": {
                 "description": "Login with email and password",
@@ -674,9 +725,9 @@ const docTemplate = `{
         "github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.UserRegister": {
             "type": "object",
             "required": [
-                "confirmPassword",
                 "email",
                 "password",
+                "confirmPassword",
                 "username"
             ],
             "properties": {
@@ -719,9 +770,8 @@ var SwaggerInfo = &swag.Spec{
 	Version:          "1.2",
 	Host:             "api.docker.localhost",
 	BasePath:         "/",
-	Schemes:          []string{},
-	Title:            "Fiber API for new word project",
-	Description:      "This Api makes the CRUD operations for testing the new world project",
+	Title:            "🌍 API New World",
+	Description:      "API RESTful que proporciona servicios para la gestión de usuarios, ofertas y pedidos del proyecto New World.\n\n### Características principales:\n- Autenticación mediante JWT\n- Gestión completa de usuarios\n- Sistema de ofertas y pedidos\n- Panel administrativo\n- Operaciones CRUD\n\n### Documentación adicional\nPara más información, visita nuestro [repositorio en GitHub](https://github.com/ICOMP-UNC/newworld-LaureanoOlocco)",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

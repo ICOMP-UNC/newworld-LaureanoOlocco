@@ -196,17 +196,48 @@ definitions:
     type: object
 host: api.docker.localhost
 info:
+  title: API de New World
+  description: API RESTful para el proyecto New World que permite gestionar usuarios, ofertas y pedidos
+  version: "1.2"
   contact:
-    email: fiber@swagger.io
-    name: API Support
-  description: This Api makes the CRUD operations for testing the new world project
+    name: Soporte API
+    email: laureanoolocco@unc.edu.ar
+    url: https://github.com/ICOMP-UNC/newworld-LaureanoOlocco
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
-  termsOfService: http://swagger.io/terms/
-  title: Fiber API for new word project
-  version: "1.2"
+  
 paths:
+
+  /auth/logout:
+    post:
+      tags:
+        - auth
+      summary: Logout user
+      description: Invalidates the user's token and logs them out
+      security:
+        - Bearer: []
+      responses:
+        '200':
+          description: Successfully logged out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Logged out successfully"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Missing or malformed JWT"
   /admin/dashboard:
     get:
       consumes:
@@ -471,3 +502,18 @@ paths:
       tags:
       - Users
 swagger: "2.0"
+
+securityDefinitions:
+  Bearer:
+    type: apiKey
+    name: Authorization
+    in: header
+    description: 'JWT token de autenticación. Ejemplo: Bearer {token}'
+
+tags:
+  - name: Usuarios
+    description: Operaciones relacionadas con usuarios
+  - name: Ofertas
+    description: Gestión de ofertas y pedidos
+  - name: Admin
+    description: Operaciones administrativas

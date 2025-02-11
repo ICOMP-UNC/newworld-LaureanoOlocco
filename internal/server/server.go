@@ -34,34 +34,39 @@ func (s *Server) Start() {
 	app.Use(cors.New())
 	app.Use(logger.New())
 
-	// Ruta raíz que devuelve un mensaje de bienvenida
+	// Ruta raíz
+	app.Static("/static", "./static") // Servir archivos estáticos
 	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Welcome to Laureano's New World")
+		return c.SendFile("./static/welcome.html")
 	})
-	// Endpoints related to everyone
+
+	// Endpoints públicos
 	userRoutes := app.Group("/user")
 	userRoutes.Post("/register", s.userHandlers.Register)
 	userRoutes.Post("/login", s.userHandlers.Login)
 	userRoutes.Get("/search", s.userHandlers.GetUserByEmail)
+	userRoutes.Post("/logout", utils.Logout) // Agregar logout
 
-	// Endpoints related to offers
+	// Endpoints autenticados
 	authRoutes := app.Group("/auth")
 	authRoutes.Use(utils.AuthToken)
 	authRoutes.Get("/offers", s.offerHandlers.GetOffers)
 	authRoutes.Post("/checkout", s.offerHandlers.Checkout)
 	authRoutes.Get("/order/:id", s.offerHandlers.GetOrderById)
 
-	// Endpoints related to admin
+	// Endpoints de admin
 	adminRoutes := app.Group("/admin")
-	// adminRoutes.Use(utils.AuthAdminToken)
 	adminRoutes.Get("/dashboard", s.addminHandlers.GetDashboard)
 	adminRoutes.Patch("/orders/:id", s.addminHandlers.UpdateOrderStatus)
 
-	// Use swagger middleware
+	// Swagger
 	app.Get("/swagger/*", swagger.HandlerDefault)
 
-	// Start the server
+	// Iniciar el servidor
 	port := os.Getenv("API_PORT")
+	if port == "" {
+		log.Fatal("API_PORT is not set in the environment")
+	}
 	log.Printf("Server running on port %s", port)
 	if err := app.Listen(":" + port); err != nil {
 		log.Fatalf("Error starting server: %q", err)

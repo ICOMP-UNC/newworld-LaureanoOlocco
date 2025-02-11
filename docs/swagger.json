@@ -1,22 +1,69 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "This Api makes the CRUD operations for testing the new world project",
-        "title": "Fiber API for new word project",
-        "termsOfService": "http://swagger.io/terms/",
+        "title": "🌍 API New World",
+        "description": "API RESTful que proporciona servicios para la gestión de usuarios, ofertas y pedidos del proyecto New World.\n\n### Características principales:\n- Autenticación mediante JWT\n- Gestión completa de usuarios\n- Sistema de ofertas y pedidos\n- Panel administrativo\n- Operaciones CRUD\n\n### Documentación adicional\nPara más información, visita mí [repositorio en GitHub](https://github.com/ICOMP-UNC/newworld-LaureanoOlocco)",
+        "version": "1.0",
         "contact": {
-            "name": "API Support",
-            "email": "fiber@swagger.io"
+            "name": "Laureano Olocco",
+            "email": "laureanoolocco@unc.edu.ar",
+            "url": "https://github.com/ICOMP-UNC/newworld-LaureanoOlocco"
         },
         "license": {
-            "name": "Apache 2.0",
+            "name": "Licencia Apache 2.0",
             "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
         },
-        "version": "1.2"
+        "termsOfService": "https://github.com/ICOMP-UNC/newworld-LaureanoOlocco/blob/main/LICENSE"
     },
     "host": "api.docker.localhost",
     "basePath": "/",
     "paths": {
+        "/auth/logout": {
+    "post": {
+        "security": [
+            {
+                "ApiKeyAuth": []
+            }
+        ],
+        "description": "Invalidate JWT token and logout user",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "tags": [
+            "Users"
+        ],
+        "summary": "User logout",
+        "parameters": [
+            {
+                "type": "string",
+                "description": "JWT token",
+                "name": "Authorization",
+                "in": "header",
+                "required": true
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "OK",
+                "schema": {
+                    "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.Response"
+                }
+            },
+            "401": {
+                "description": "Unauthorized",
+                "schema": {
+                    "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.BadResponse"
+                }
+            },
+            "500": {
+                "description": "Bad server"
+            }
+        }
+    }
+},
         "/admin/dashboard": {
             "get": {
                 "security": [

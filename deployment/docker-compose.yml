@@ -1,11 +1,14 @@
+version: "3.8"
+
 services:
-  api: # Esto es para la API
-    build: ./.. # Ruta al Dockerfile
-    restart: on-failure # Si el contenedor falla, reinicialo
-    depends_on: # Depende de la base de datos
+  api:
+    build: ./..
+    restart: on-failure
+    depends_on:
       - db
+      - redis
     ports:
-      - "${API_PORT}:${API_PORT}" # Izquierda: puerto externo del contenedor (navegador), derecha: puerto de la API en sí 
+      - "${API_PORT}:${API_PORT}"
     environment:
       - API_PORT=${API_PORT}
       - DOMAIN=${DOMAIN}
@@ -16,15 +19,19 @@ services:
       - DB_HOST=${DB_HOST}
       - RUN_LOCAL=${RUN_LOCAL}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
     labels:
       - "traefik.http.routers.api.entrypoints=web"
       - "traefik.http.routers.api.rule=Host(`api.localhost`)"
     volumes:
-      # El volumen cppserver-data fue eliminado porque dependía del cppserver
       - cppserver-data:/usr/src/app/build/serverDB
+    networks:
+      - web
+      - traefik-network
 
-  cppserver: #esto es para el servidor de c++
-    image: cppserver:latest #imagen de c++
+  cppserver:
+    image: cppserver:latest
     restart: on-failure
     ports:
       - "9004:9004"
@@ -34,21 +41,22 @@ services:
       - "traefik.http.routers.cppserver.entrypoints=web"
       - "traefik.http.routers.cppserver.rule=Host(`cppserver.docker.localhost`)"
       - "traefik.http.services.cppserver.loadbalancer.server.port=8083"
-      #- "traefik.http.services.cppserver.loadbalancer.server.port=9004"
-      #- "traefik.http.services.cppserver.loadbalancer.server.port=9000"
     volumes:
       - cppserver-data:/usr/src/app/build/serverDB
+    networks:
+      - traefik-network
 
   whoami:
-    # Un contenedor que expone una API para mostrar su dirección IP
     image: traefik/whoami
     labels:
       - "traefik.http.routers.whoami.rule=Host(`whoami.docker.localhost`)"
+    networks:
+      - traefik-network
 
   db:
-    image: postgres # Imagen de PostgreSQL
-    restart: "no" # No reiniciar el contenedor
-    shm_size: 128mb # Set shared memory limit when using docker-compose
+    image: postgres
+    restart: "no"
+    shm_size: 128mb
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
@@ -56,13 +64,14 @@ services:
     labels:
       - "traefik.enable=false"
     ports:
-      - "${DB_PORT}:5432" # Puerto de la base de datos (quizás no haga falta si no me quiero conectar desde afuera)
+      - "${DB_PORT}:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql # Script SQL para inicializar la base de datos  
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - web
 
   adminer:
-    # Herramienta de gestión de bases de datos, útil para desarrollo
     image: adminer
     restart: "no"
     ports:
@@ -70,23 +79,31 @@ services:
     labels:
       - "traefik.http.routers.adminer.entrypoints=web"
       - "traefik.http.routers.adminer.rule=Host(`adminer.docker.localhost`)"
+    networks:
+      - traefik-network
+      - web
 
   reverse-proxy:
-    # Imagen oficial de Traefik v3
     image: traefik:v3.0
-    # Habilita la interfaz web y configura Traefik para escuchar a Docker
-    command: 
+    command:
       - "--api.insecure=true"
       - "--providers.docker"
       - "--entrypoints.web.address=:80"
     ports:
-      # Puerto HTTP
       - "80:80"
-      # Interfaz web (habilitada con --api.insecure=true)
       - "8080:8080"
     volumes:
-      # Para que Traefik pueda escuchar los eventos de Docker
       - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - traefik-network
+
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "${REDIS_PORT:-6379}:${REDIS_PORT:-6379}"
+    networks:
+      - web
 
 volumes:
   db-data:
@@ -94,5 +111,4 @@ volumes:
 
 networks:
   traefik-network:
-  deployment_default:
   web:
