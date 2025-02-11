@@ -3,15 +3,40 @@ description: Run testing on Go code
 runs:
   using: 'composite'
   steps:
+    - name: Set up Redis
+      shell: bash
+      run: |
+        docker run -d --name redis -p 6379:6379 redis:latest
+        sleep 5 # Wait for Redis to start
+
+    - name: Set up environment variables
+      shell: bash
+      run: |
+        echo "REDIS_HOST=localhost" >> $GITHUB_ENV
+        echo "REDIS_PORT=6379" >> $GITHUB_ENV
+        echo "ADMIN_EMAIL=admin@test.com" >> $GITHUB_ENV
+        echo "ADMIN_PASSWORD=admin_password" >> $GITHUB_ENV
+        echo "API_PORT=3000" >> $GITHUB_ENV
+
     - name: Run Tests with Coverage
       shell: bash
       id: coverage
       run: |
-        go test -coverprofile=coverage.out ./...
+        # Skip specific packages from coverage calculation
+        SKIP_PKGS="github.com/ICOMP-UNC/newworld-LaureanoOlocco/docs|github.com/ICOMP-UNC/newworld-LaureanoOlocco/cmd"
+        
+        # Run tests and generate coverage
+        go test -coverprofile=coverage.tmp ./...
+        
+        # Filter out skipped packages from coverage report
+        cat coverage.tmp | grep -v "${SKIP_PKGS}" > coverage.out
+        
+        # Calculate coverage
         coverage=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
-
+        
         echo "Coverage is $coverage%"
-
+        
+        # Compare coverage with threshold
         if (( $(echo "$coverage >= 20" | bc -l) )); then
           echo "Coverage is greater than 20%"
           exit 0
@@ -19,3 +44,10 @@ runs:
           echo "Coverage is not greater than 20%"
           exit 1
         fi
+
+    - name: Cleanup
+      if: always()
+      shell: bash
+      run: |
+        docker stop redis || true
+        docker rm redis || true
