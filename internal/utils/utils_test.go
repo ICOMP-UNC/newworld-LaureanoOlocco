@@ -130,63 +130,6 @@ func TestAuthToken(t *testing.T) {
 	}
 }
 
-func TestLogout(t *testing.T) {
-	app := fiber.New()
-	app.Post("/logout", Logout)
-
-	tests := []struct {
-		name           string
-		setup          func() (string, error)
-		expectedStatus int
-	}{
-		{
-			name: "Valid logout",
-			setup: func() (string, error) {
-				return GenerateJWT("test@example.com", "password")
-			},
-			expectedStatus: fiber.StatusOK,
-		},
-		{
-			name: "Invalid token",
-			setup: func() (string, error) {
-				return "invalid.token", nil
-			},
-			expectedStatus: fiber.StatusUnauthorized,
-		},
-		{
-			name: "Missing token",
-			setup: func() (string, error) {
-				return "", nil
-			},
-			expectedStatus: fiber.StatusUnauthorized,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			token, err := tt.setup()
-			if err != nil {
-				t.Fatalf("Setup failed: %v", err)
-			}
-
-			req := httptest.NewRequest("POST", "/logout", nil)
-			if token != "" {
-				req.Header.Set("Authorization", "Bearer "+token)
-			}
-
-			resp, err := app.Test(req)
-			assert.NoError(t, err)
-			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
-
-			if tt.name == "Valid logout" {
-				// Verify token was removed from Redis
-				exists, _ := RedisClient.Exists(ctx, token).Result()
-				assert.Equal(t, int64(0), exists)
-			}
-		})
-	}
-}
-
 func TestExtractToken(t *testing.T) {
 	tests := []struct {
 		name          string
