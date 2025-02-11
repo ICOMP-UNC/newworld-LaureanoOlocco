@@ -78,57 +78,54 @@ func TestGenerateJWT(t *testing.T) {
 
 func TestAuthToken(t *testing.T) {
 	app := fiber.New()
-	app.Use(AuthToken)
 
-	// Agregar una ruta de prueba
-	app.Get("/test", func(c *fiber.Ctx) error {
+	app.Get("/protected", AuthToken, func(c *fiber.Ctx) error {
 		return c.SendString("OK")
 	})
 
 	tests := []struct {
 		name           string
-		setupToken     bool
-		token          string
+		setup          func() (string, error)
 		expectedStatus int
 	}{
 		{
-			name:           "Valid token",
-			setupToken:     true,
-			token:          "valid_token",
+			name: "Valid token",
+			setup: func() (string, error) {
+				return GenerateJWT("test@example.com", "password")
+			},
 			expectedStatus: fiber.StatusOK,
 		},
 		{
-			name:           "Missing token",
-			setupToken:     false,
-			token:          "",
+			name: "Missing token",
+			setup: func() (string, error) {
+				return "", nil
+			},
 			expectedStatus: fiber.StatusUnauthorized,
 		},
 		{
-			name:           "Invalid token",
-			setupToken:     false,
-			token:          "invalid_token",
+			name: "Invalid token",
+			setup: func() (string, error) {
+				return "invalid.token", nil
+			},
 			expectedStatus: fiber.StatusUnauthorized,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.setupToken {
-				RedisClient.Set(ctx, tt.token, "test@example.com", 0)
+			token, err := tt.setup()
+			if err != nil {
+				t.Fatalf("Setup failed: %v", err)
 			}
 
-			req := httptest.NewRequest("GET", "/test", nil)
-			if tt.token != "" {
-				req.Header.Set("Authorization", "Bearer "+tt.token)
+			req := httptest.NewRequest("GET", "/protected", nil)
+			if token != "" {
+				req.Header.Set("Authorization", "Bearer "+token)
 			}
 
 			resp, err := app.Test(req)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
-
-			if tt.setupToken {
-				RedisClient.Del(ctx, tt.token)
-			}
 		})
 	}
 }
@@ -139,42 +136,51 @@ func TestLogout(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		setupToken     bool
-		token          string
+		setup          func() (string, error)
 		expectedStatus int
 	}{
 		{
-			name:           "Valid logout",
-			setupToken:     true,
-			token:          "valid_token",
+			name: "Valid logout",
+			setup: func() (string, error) {
+				return GenerateJWT("test@example.com", "password")
+			},
 			expectedStatus: fiber.StatusOK,
 		},
 		{
-			name:           "Invalid token",
-			setupToken:     false,
-			token:          "invalid_token",
+			name: "Invalid token",
+			setup: func() (string, error) {
+				return "invalid.token", nil
+			},
+			expectedStatus: fiber.StatusUnauthorized,
+		},
+		{
+			name: "Missing token",
+			setup: func() (string, error) {
+				return "", nil
+			},
 			expectedStatus: fiber.StatusUnauthorized,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.setupToken {
-				RedisClient.Set(ctx, tt.token, "test@example.com", 0)
+			token, err := tt.setup()
+			if err != nil {
+				t.Fatalf("Setup failed: %v", err)
 			}
 
 			req := httptest.NewRequest("POST", "/logout", nil)
-			if tt.token != "" {
-				req.Header.Set("Authorization", "Bearer "+tt.token)
+			if token != "" {
+				req.Header.Set("Authorization", "Bearer "+token)
 			}
 
 			resp, err := app.Test(req)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedStatus, resp.StatusCode)
 
-			if tt.setupToken {
-				// Verificar que el token fue eliminado de Redis
-				exists, _ := RedisClient.Exists(ctx, tt.token).Result()
+			if tt.name == "Valid logout" {
+				// Verify token was removed from Redis
+				exists, _ := RedisClient.Exists(ctx, token).Result()
 				assert.Equal(t, int64(0), exists)
 			}
 		})
