@@ -59,7 +59,7 @@ func (h *UserHandlers) Login(c *fiber.Ctx) error {
 				_, reset, _ := utils.GetRateLimitInfo(ip, "login")
 				remainingMinutes := int((reset - time.Now().Unix()) / 60)
 				return c.Status(fiber.StatusTooManyRequests).JSON(domain.BadResponse{
-					Code:    "409",
+					Code:    "429",
 					Message: fmt.Sprintf("Too many failed attempts. Try again in %d minutes", remainingMinutes),
 				})
 			}
