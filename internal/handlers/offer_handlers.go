@@ -51,26 +51,42 @@ func (h *OfferHandlers) GetOffers(c *fiber.Ctx) error {
 // @Failure 500 "Bad server"
 // @Router /auth/checkout [post]
 func (h *OfferHandlers) Checkout(c *fiber.Ctx) error {
-
 	var req domain.OrderCheckout
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(domain.BadResponse{Code: "400", Message: "Bad request"})
 	}
 
-	//extract the token from the header
-	tokenString := c.Get("Authorization")
+	// Extract token using the proper utility function
+	tokenString := utils.ExtractToken(c)
+	if tokenString == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(domain.BadResponse{
+			Code:    "401",
+			Message: "Missing or malformed token",
+		})
+	}
+
+	// Get email from token
 	email, err := utils.ExtractEmailFromToken(tokenString)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(domain.BadResponse{Code: "401", Message: "Invalid token"})
+		return c.Status(fiber.StatusUnauthorized).JSON(domain.BadResponse{
+			Code:    "401",
+			Message: "Invalid or expired token",
+		})
 	}
 
-	// call the service to process the order
+	// Call the service to process the order
 	err, order := h.offerService.ProcessOrder(email, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(domain.BadResponse{Code: "500", Message: err.Error()})
+		return c.Status(fiber.StatusInternalServerError).JSON(domain.BadResponse{
+			Code:    "500",
+			Message: err.Error(),
+		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(domain.OrderResponse{Code: "200", Message: order})
+	return c.Status(fiber.StatusOK).JSON(domain.OrderResponse{
+		Code:    "200",
+		Message: order,
+	})
 }
 
 // Checkout handles the checkout process

@@ -21,16 +21,17 @@ const (
 )
 
 var (
-	adminEmail    = os.Getenv("ADMIN_EMAIL")
-	adminPassword = os.Getenv("ADMIN_PASSWORD")
+	AdminEmail    = os.Getenv("ADMIN_EMAIL")
+	AdminPassword = os.Getenv("ADMIN_PASSWORD")
 )
 
-// var JwtKey = []byte("yJ42jhCACeBRZsXiRi22qZSTnn1xbVev6ybirXaoYS8=")
 var JwtKey = []byte(os.Getenv("JWT_SECRET_KEY"))
 var RedisClient *redis.Client
 var ctx = context.Background()
 
 func init() {
+	log.Printf("Admin email configured: %s", AdminEmail)
+	log.Printf("Admin password configured: %s", AdminPassword)
 
 	redisHost := os.Getenv("REDIS_HOST")
 	redisPort := os.Getenv("REDIS_PORT")
@@ -38,27 +39,22 @@ func init() {
 		redisPort = "6379"
 	}
 
-	log.Printf("Redis connecting to: %s:%s", redisHost, redisPort)
-
-	secret := os.Getenv("JWT_SECRET_KEY")
-	if secret == "" {
-		log.Fatalf("JWT_SECRET_KEY is not set in the environment")
-	}
-	log.Printf("JWT secret key length: %d", len(secret))
-	JwtKey = []byte(secret)
+	log.Printf("Attempting to connect to Redis at %s:%s", redisHost, redisPort)
 
 	// Configurar Redis
 	RedisClient = redis.NewClient(&redis.Options{
-		Addr:     redisHost + ":" + redisPort, // Cambia esto si Redis está en otro servidor
-		Password: "",                          // Si tienes una contraseña en Redis, agrégala aquí
-		DB:       0,                           // Base de datos Redis (0 es la predeterminada)
+		Addr:     redisHost + ":" + redisPort,
+		Password: "",
+		DB:       0,
 	})
 
 	// Probar conexión con Redis
 	_, err := RedisClient.Ping(ctx).Result()
 	if err != nil {
-		log.Fatalf("Failed to connect to Redis: %v", err)
+		log.Printf("Failed to connect to Redis: %v", err)
+		log.Fatalf("Redis connection failed: %v", err)
 	}
+	log.Printf("Successfully connected to Redis")
 }
 
 type Claims struct {
@@ -72,10 +68,12 @@ type GenerateJWTFunc func(email, password string) (string, error)
 
 // GenerateJWT generates a JWT token with the provided email and role
 var GenerateJWT GenerateJWTFunc = func(email, password string) (string, error) {
+
 	expirationTime := time.Now().Add(99 * time.Minute)
 	role := "user"
 
-	if email == adminEmail && password == adminPassword {
+	if IsAdmin(email, password) {
+		log.Printf("Admin role assigned")
 		role = "admin"
 	}
 
@@ -90,13 +88,12 @@ var GenerateJWT GenerateJWTFunc = func(email, password string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(JwtKey)
 	if err != nil {
+		log.Printf("Error signing token: %v", err)
 		return "", errors.New("error generating token")
 	}
 
-	// Guardar el token en Redis con tiempo de expiración
 	err = RedisClient.Set(ctx, tokenString, email, 99*time.Minute).Err()
 	if err != nil {
-		log.Printf("Failed to store JWT in Redis: %v", err)
 		return "", errors.New("failed to store JWT in Redis")
 	}
 
@@ -104,7 +101,7 @@ var GenerateJWT GenerateJWTFunc = func(email, password string) (string, error) {
 }
 
 func AuthToken(c *fiber.Ctx) error {
-	tokenString := extractToken(c)
+	tokenString := ExtractToken(c)
 	log.Printf("Token received: %s", tokenString) // Debug del token recibido
 
 	if tokenString == "" {
@@ -143,7 +140,7 @@ func AuthToken(c *fiber.Ctx) error {
 
 // cheking if the token is valid and if the role is admin
 func AuthAdminToken(c *fiber.Ctx) error {
-	tokenString := extractToken(c)
+	tokenString := ExtractToken(c)
 	if tokenString == "" {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Missing or malformed JWT"})
 	}
@@ -197,7 +194,7 @@ func ExtractEmailFromToken(tokenStr string) (string, error) {
 }
 
 func Logout(c *fiber.Ctx) error {
-	tokenString := extractToken(c)
+	tokenString := ExtractToken(c)
 	if tokenString == "" {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Missing or malformed JWT"})
 	}
@@ -211,7 +208,7 @@ func Logout(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Logged out successfully"})
 }
 
-func extractToken(c *fiber.Ctx) string {
+func ExtractToken(c *fiber.Ctx) string {
 	bearerToken := c.Get("Authorization")
 	log.Printf("Authorization header: %s", bearerToken) // Debug header completo
 	if bearerToken == "" {
@@ -278,4 +275,8 @@ func GetRateLimitInfo(ip string, prefix string) (remaining int64, reset int64, e
 func ClearLoginRateLimit(ip string) error {
 	key := fmt.Sprintf("rate_limit:login:%s", ip)
 	return RedisClient.Del(ctx, key).Err()
+}
+
+func IsAdmin(email, password string) bool {
+	return email == AdminEmail && password == AdminPassword
 }

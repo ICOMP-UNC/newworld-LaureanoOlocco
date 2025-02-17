@@ -164,7 +164,7 @@ func TestExtractToken(t *testing.T) {
 			c.Request().Header.Set("Authorization", tt.authorization)
 
 			// Probar la función
-			result := extractToken(c)
+			result := ExtractToken(c)
 			assert.Equal(t, tt.expected, result)
 		})
 	}

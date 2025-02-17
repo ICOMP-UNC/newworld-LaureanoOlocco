@@ -42,6 +42,15 @@ func (h *UserHandlers) Login(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(domain.BadResponse{Code: "400", Message: "Bad request"})
 	}
 
+	if utils.IsAdmin(req.Email, req.Password) {
+		// Generate token directly for admin
+		token, err := utils.GenerateJWT(req.Email, req.Password)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(domain.BadResponse{Code: "500", Message: "Internal server error"})
+		}
+		return c.JSON(domain.UserResponseLogin{Code: "200", Token: token})
+	}
+
 	// if the request is fine, we call the login function from the user service
 	err := h.userService.Login(req.Email, req.Password)
 	if err != nil {

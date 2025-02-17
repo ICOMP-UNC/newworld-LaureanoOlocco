@@ -17,6 +17,8 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_PORT=${DB_PORT}
       - DB_HOST=${DB_HOST}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - RUN_LOCAL=${RUN_LOCAL}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - REDIS_HOST=${REDIS_HOST:-redis}

@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	//_ "github.com/ICOMP-UNC/newworld-rodriguezzfran/docs" // Import generated docs
 	_ "github.com/lib/pq"
 
 	"github.com/ICOMP-UNC/newworld-LaureanoOlocco/database"
@@ -29,11 +28,6 @@ import (
 // @host api.docker.localhost
 // @BasePath /
 func main() {
-
-	// Load environment variables
-	// if err := godotenv.Load(); err != nil {
-	// 	log.Fatalf("Error loading .env file: %q", err)
-	// }
 
 	// check if the environment variables PORT and HOST are not empty
 	var connStr string
@@ -59,13 +53,6 @@ func main() {
 			port,
 		)
 	}
-
-	log.Printf("Environment variables:")
-	log.Printf("RUN_LOCAL: '%s'", os.Getenv("RUN_LOCAL"))
-	log.Printf("DB_HOST: '%s'", os.Getenv("DB_HOST"))
-	log.Printf("DB_PORT: '%s'", os.Getenv("DB_PORT"))
-	log.Printf("DB_NAME: '%s'", os.Getenv("DB_NAME"))
-	log.Printf("DB_USER: '%s'", os.Getenv("DB_USER"))
 
 	log.Printf("Connecting to database with connection string: %s", strings.Replace(connStr, os.Getenv("DB_PASSWORD"), "[REDACTED]", 1))
 
