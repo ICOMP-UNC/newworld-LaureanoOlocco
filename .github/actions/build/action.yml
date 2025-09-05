@@ -10,4 +10,4 @@ runs:
   steps:
     - name: Build
       shell: bash
-      run: go build -v ${{ inputs.target-directory }}
+      run: go build -v ${{ inputs.target-directory }}/cmd/main.go

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Refugio de Laureano</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(120deg, #000000, #1e1e1e);
+            color: #ffffff;
+            font-family: 'Orbitron', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 600px;
+        }
+
+        h1 {
+            font-size: 3rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0px 0px 20px rgba(255, 255, 255, 0.6);
+            animation: fadeIn 2s ease-in-out;
+        }
+
+        p {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            animation: fadeIn 2.5s ease-in-out;
+        }
+
+        .btn-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            color: #fff;
+            background: #ff4500;
+            border: none;
+            border-radius: 50px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 0 15px rgba(255, 69, 0, 0.7);
+            animation: pulse 2s infinite;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: #ff6347;
+            box-shadow: 0 0 25px rgba(255, 99, 71, 0.9);
+            transform: scale(1.1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 15px rgba(255, 69, 0, 0.7); }
+            50% { box-shadow: 0 0 25px rgba(255, 69, 0, 1); }
+            100% { box-shadow: 0 0 15px rgba(255, 69, 0, 0.7); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bienvenido al Refugio de Laureano</h1>
+        <p>En un mundo en ruinas, este es tu santuario. Aquí encontrarás protección, suministros y esperanza.</p>
+        
+        <div class="btn-container">
+            <a href="/swagger/index.html#/" class="btn">Cómo usar el refugio</a>
+        </div>
+    </div>
+</body>
+</html>

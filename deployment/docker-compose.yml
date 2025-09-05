@@ -1,0 +1,116 @@
+version: "3.8"
+
+services:
+  api:
+    build: ./..
+    restart: on-failure
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    environment:
+      - API_PORT=${API_PORT}
+      - DOMAIN=${DOMAIN}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - DB_HOST=${DB_HOST}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - RUN_LOCAL=${RUN_LOCAL}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+    labels:
+      - "traefik.http.routers.api.entrypoints=web"
+      - "traefik.http.routers.api.rule=Host(`api.localhost`)"
+    volumes:
+      - cppserver-data:/usr/src/app/build/serverDB
+    networks:
+      - web
+      - traefik-network
+
+  cppserver:
+    image: cppserver:latest
+    restart: on-failure
+    ports:
+      - "9004:9004"
+      - "9000:9000"
+      - "8083:8083"
+    labels:
+      - "traefik.http.routers.cppserver.entrypoints=web"
+      - "traefik.http.routers.cppserver.rule=Host(`cppserver.docker.localhost`)"
+      - "traefik.http.services.cppserver.loadbalancer.server.port=8083"
+    volumes:
+      - cppserver-data:/usr/src/app/build/serverDB
+    networks:
+      - traefik-network
+
+  whoami:
+    image: traefik/whoami
+    labels:
+      - "traefik.http.routers.whoami.rule=Host(`whoami.docker.localhost`)"
+    networks:
+      - traefik-network
+
+  db:
+    image: postgres
+    restart: "no"
+    shm_size: 128mb
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    labels:
+      - "traefik.enable=false"
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - web
+
+  adminer:
+    image: adminer
+    restart: "no"
+    ports:
+      - 9080:9080
+    labels:
+      - "traefik.http.routers.adminer.entrypoints=web"
+      - "traefik.http.routers.adminer.rule=Host(`adminer.docker.localhost`)"
+    networks:
+      - traefik-network
+      - web
+
+  reverse-proxy:
+    image: traefik:v3.0
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - traefik-network
+
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "${REDIS_PORT:-6379}:${REDIS_PORT:-6379}"
+    networks:
+      - web
+
+volumes:
+  db-data:
+  cppserver-data:
+
+networks:
+  traefik-network:
+  web:

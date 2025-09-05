@@ -1,0 +1,756 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "🌍 API New World",
+        "description": "API RESTful que proporciona servicios para la gestión de usuarios, ofertas y pedidos del proyecto New World.\n\n### Características principales:\n- Autenticación mediante JWT\n- Gestión completa de usuarios\n- Sistema de ofertas y pedidos\n- Panel administrativo\n- Operaciones CRUD\n\n### Documentación adicional\nPara más información, visita mí [repositorio en GitHub](https://github.com/ICOMP-UNC/newworld-LaureanoOlocco)",
+        "version": "1.0",
+        "contact": {
+            "name": "Laureano Olocco",
+            "email": "laureanoolocco@unc.edu.ar",
+            "url": "https://github.com/ICOMP-UNC/newworld-LaureanoOlocco"
+        },
+        "license": {
+            "name": "Licencia Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "termsOfService": "https://github.com/ICOMP-UNC/newworld-LaureanoOlocco/blob/main/LICENSE"
+    },
+    "host": "api.docker.localhost",
+    "basePath": "/",
+    "paths": {
+        "/auth/logout": {
+    "post": {
+        "security": [
+            {
+                "ApiKeyAuth": []
+            }
+        ],
+        "description": "Invalidate JWT token and logout user",
+        "consumes": [
+            "application/json"
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "tags": [
+            "Users"
+        ],
+        "summary": "User logout",
+        "parameters": [
+            {
+                "type": "string",
+                "description": "JWT token",
+                "name": "Authorization",
+                "in": "header",
+                "required": true
+            }
+        ],
+        "responses": {
+            "200": {
+                "description": "OK",
+                "schema": {
+                    "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.Response"
+                }
+            },
+            "401": {
+                "description": "Unauthorized",
+                "schema": {
+                    "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.BadResponse"
+                }
+            },
+            "500": {
+                "description": "Bad server"
+            }
+        }
+    }
+},
+        "/admin/dashboard": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve the dashboard data using JWT token authentication",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get the dashboard data",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "JWT token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.DashboardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.BadResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Bad server"
+                    }
+                }
+            }
+        },
+        "/admin/orders/{id}": {
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update the status of an order using JWT token authentication",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Update the order status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "JWT token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Order Status",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OrderStatusUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.UserOrderStatus"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.BadResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Order not found"
+                    },
+                    "500": {
+                        "description": "Bad server"
+                    }
+                }
+            }
+        },
+        "/auth/checkout": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Checkout an order by providing the order details using JWT token authentication",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Offers"
+                ],
+                "summary": "Checkout an order",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "JWT token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "Order details",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OrderCheckout"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OrderResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.BadResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid token"
+                    },
+                    "500": {
+                        "description": "Bad server"
+                    }
+                }
+            }
+        },
+        "/auth/offers": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieve all offers using JWT token authentication",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Offers"
+                ],
+                "summary": "Get all offers",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "JWT token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OffersRegister"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.BadResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Bad server"
+                    }
+                }
+            }
+        },
+        "/auth/order/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get an order by providing the order ID using JWT token authentication",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Offers"
+                ],
+                "summary": "Get order by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "JWT token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Order ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OrderStatusResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.BadResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid token"
+                    },
+                    "500": {
+                        "description": "Bad server"
+                    }
+                }
+            }
+        },
+        "/user/login": {
+            "post": {
+                "description": "Login with email and password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "User login",
+                "parameters": [
+                    {
+                        "description": "User login details",
+                        "name": "userLogin",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.UserLogin"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.UserResponseLogin"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.BadResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid password"
+                    },
+                    "404": {
+                        "description": "User not found"
+                    },
+                    "500": {
+                        "description": "Bad server"
+                    }
+                }
+            }
+        },
+        "/user/register": {
+            "post": {
+                "description": "Register with username, email, password, and confirm password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "User registration",
+                "parameters": [
+                    {
+                        "description": "User registration details",
+                        "name": "userRegister",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.UserRegister"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.BadResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "The passwords are not equal"
+                    },
+                    "402": {
+                        "description": "Mail already registered"
+                    },
+                    "500": {
+                        "description": "Bad server"
+                    }
+                }
+            }
+        },
+        "/user/search": {
+            "get": {
+                "description": "Get user details by email",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get user by email",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Email",
+                        "name": "email",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.User"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found"
+                    },
+                    "500": {
+                        "description": "Bad server"
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.BadResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "400"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Bad request"
+                }
+            }
+        },
+        "github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.Dashboard": {
+            "type": "object",
+            "properties": {
+                "balance": {
+                    "type": "integer",
+                    "example": 100
+                },
+                "offers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OfferWithPrice"
+                    }
+                },
+                "orders": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.UserOrderStatus"
+                    }
+                }
+            }
+        },
+        "github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.DashboardResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "200"
+                },
+                "message": {
+                    "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.Dashboard"
+                }
+            }
+        },
+        "github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.Items": {
+            "type": "object",
+            "required": [
+                "itemID",
+                "quantity"
+            ],
+            "properties": {
+                "itemID": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "quantity": {
+                    "type": "integer",
+                    "example": 23
+                }
+            }
+        },
+        "github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OfferWithPrice": {
+            "type": "object",
+            "required": [
+                "category",
+                "id",
+                "name",
+                "price",
+                "quantity"
+            ],
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "example": "food"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "name": {
+                    "type": "string",
+                    "example": "meat"
+                },
+                "price": {
+                    "type": "number",
+                    "example": 10.5
+                },
+                "quantity": {
+                    "type": "integer",
+                    "example": 9
+                }
+            }
+        },
+        "github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OffersRegister": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "200"
+                },
+                "message": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OfferWithPrice"
+                    }
+                }
+            }
+        },
+        "github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.Order": {
+            "type": "object",
+            "required": [
+                "status",
+                "total"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "example": "pending"
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 100
+                }
+            }
+        },
+        "github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OrderCheckout": {
+            "type": "object",
+            "properties": {
+                "order": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.Items"
+                    }
+                }
+            }
+        },
+        "github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OrderResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "200"
+                },
+                "message": {
+                    "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.Order"
+                }
+            }
+        },
+        "github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OrderStatusResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "200"
+                },
+                "message": {
+                    "$ref": "#/definitions/github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.UserOrderStatus"
+                }
+            }
+        },
+        "github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.OrderStatusUpdate": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "example": "delivered"
+                }
+            }
+        },
+        "github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.Response": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "201"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "User added"
+                }
+            }
+        },
+        "github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.User": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.UserLogin": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "example@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "password"
+                }
+            }
+        },
+        "github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.UserOrderStatus": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "status": {
+                    "type": "string",
+                    "example": "pending"
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 100
+                },
+                "user": {
+                    "type": "string",
+                    "example": "johndoe"
+                }
+            }
+        },
+        "github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.UserRegister": {
+            "type": "object",
+            "required": [
+                "confirmPassword",
+                "email",
+                "password",
+                "username"
+            ],
+            "properties": {
+                "confirmPassword": {
+                    "type": "string",
+                    "example": "password"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "example@example.com"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "password"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "johndoe"
+                }
+            }
+        },
+        "github_com_ICOMP-UNC_newworld-LaureanoOlocco_internal_core_domain.UserResponseLogin": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "200"
+                },
+                "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+                }
+            }
+        }
+    }
+}

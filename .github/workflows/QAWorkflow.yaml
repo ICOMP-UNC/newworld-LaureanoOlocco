@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      JWT_SECRET_KEY: "your-secret-key-for-testing"  # Variable agregada aquí
 
     steps:
       - name: Checkout repository
@@ -22,11 +24,21 @@ jobs:
         uses: ./.github/actions/build
         with:
           target-directory: './'
-      - name: Linter
-        uses: ./.github/actions/linter
-        with:
-          target-directory: './'
+
       - name: Tests
         uses: ./.github/actions/tests
+  
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
         with:
-          target-directory: './tests'
+          go-version: '1.22'
+          cache: false
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.56.0
+          args: --timeout 3m

@@ -1,0 +1,8 @@
+   CREATE ROLE laureano_newworld WITH LOGIN PASSWORD 'postgres';
+   GRANT ALL PRIVILEGES ON DATABASE laureano_newworld TO laureano_newworld;
+
+   ALTER DEFAULT PRIVILEGES IN SCHEMA public
+   GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO laureano_newworld;
+
+   ALTER DEFAULT PRIVILEGES IN SCHEMA public
+   GRANT USAGE, SELECT ON SEQUENCES TO laureano_newworld;
